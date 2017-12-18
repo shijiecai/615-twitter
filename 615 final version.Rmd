@@ -56,6 +56,11 @@ setup_twitter_oauth(api_key,
 #save(my_oauth, file = "my_oauth.Rdata")
 ```
 
+\vspace{5mm}
+\textbf{\Large{1-In this part, I create 2 maps for Ronaldo and Messi. First one is for ronaldo and second one is for messi.}}
+\vspace{5mm}
+
+
 ```{r}
 load("my_oauth.Rdata")
 filterStream("ronaldo.json", 
@@ -130,8 +135,12 @@ ggplot(state) +
 saveRDS(messipoints, file="messimap.rds")
 ```
 
-I only give 30 seconds for twitter to find data, so it might be not very accurate. Suprisingly to find that people talk Ronaldo much often then Messi, as you can see, blue dots represent Ronaldo and red dots represent Messi. It is clearly that Messi has fewer points and dots for Ronaldo mainly concentrate on the west and east coast which makes a lot sense.
+I only give 30 seconds for twitter to find data, so it might be not very accurate. Suprisingly to find that people talk Ronaldo much often then Messi, as you can see, blue dots represent Ronaldo and red dots represent Messi. It is clearly that Messi has fewer points and dots for Ronaldo mainly concentrate on the west and east coast which makes a lot sense.\newline
 
+
+\vspace{5mm}
+\textbf{\Large{2-Word cloud for 2 players.}}
+\vspace{5mm}
 
 
 ```{r}
@@ -189,6 +198,11 @@ wordcloud(wordCorpus, max.words = 100, random.order = FALSE)
 ```
 
 These wordcloud are for  my favorite soccer player Cristiano Ronaldo and his biggest rival Leo Messi. I can feel that people are really excited about these players and team, word like "ballon", "win", "5th" appears a lot. Because a few weeks ago Ronaldo just won his 5th ballon. I think people also compare Ronaldo and Messi a lot because their names appear on other tweets very often and there are other players' name on the wordcloud as well, I think people are comparing all these great players.\newline
+
+\vspace{5mm}
+\textbf{\Large{3-Sentiment Analysis.}}
+\vspace{5mm}
+
 
 ```{r}
 #Sentiment Analysis
