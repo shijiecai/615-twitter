@@ -1,0 +1,70 @@
+---
+title: "timeline"
+author: "Shijie Cai"
+date: "2017/12/16"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(devtools)
+library(twitteR)
+library(tm)
+library(stringr)
+library(wordcloud)
+library(SnowballC)
+```
+
+```{r}
+api_key <- 	"5TxFq8Omml0YFbOw0xtyuBv8A"
+api_secret <- "MkVw0SOn9F0roAGul9RvNwl0Y4p5bDpUBhVcvUHw62giLeZXdR"
+access_token <- "2240907564-2o7ZSQMMQoIAgvd46BEEzOFqbjM7R2fmc8mccyp"
+access_token_secret <- "5hcnZ3pIoG0LOh0WrMtFDR09L4q8236i85m9sMIs0YSLz"
+  
+
+setup_twitter_oauth(api_key, api_secret, access_token, access_token_secret)
+
+```
+
+Time line
+```{r}
+library(plotly)
+library(ggplot2)
+
+###Twitter account of Cristiano Ronaldo and Leo Messi and there tweets. Store them in a rds.
+
+twitter_cl <- data.frame(player=c("CristianoRonaldo", "LeoMessi"),twitter=c("Ronaldo", "messi10stats"))
+
+apply(twitter_cl, 1, FUN = function(x) {
+          df = userTimeline(x[2], n=2000)
+          df = twListToDF(df)
+          assign(x[1], df, envir=.GlobalEnv)})
+
+players11 <- list(CristianoRonaldo=CristianoRonaldo, LeoMessi=LeoMessi)
+saveRDS(players, file='players11.rds')
+
+cr <- as.data.frame(players11$CristianoRonaldo)
+saveRDS(cr, file='crtimeline.rds')
+cr1 <- plot_ly(cr, x = ~created, y = ~favoriteCount, name="Favorite", type = 'scatter',
+              mode = 'lines', line=list(color="red")) %>% add_trace(y=~retweetCount, name="Retweet", type = 'scatter', mode = 'lines', line=list(color="darkred")) %>% add_trace(
+                y=max(cr$favoriteCount, cr$retweetCount), type = 'scatter', mode = 'lines', line=list(color="white"), hoverinfo = "text", text = ~text) %>% layout(
+                  title = 'Favorites/Retweets of CristianoRonaldo Twitter Account in 6 Month', xaxis = list(title = 'Date'), 
+                  yaxis=list(title='Number of favorites/retweets'))
+cr1
+
+
+lm <- as.data.frame(players$LeoMessi)
+saveRDS(lm, file='lmtimeline.rds')
+lm1 <- plot_ly(lm, x = ~created, y = ~favoriteCount, name="Favorite", type = 'scatter',
+              mode = 'lines', line=list(color="red")) %>% add_trace(y=~retweetCount, name="Retweet", type = 'scatter', mode = 'lines', line=list(color="darkred")) %>% add_trace(
+                y=max(cr$favoriteCount, cr$retweetCount), type = 'scatter', mode = 'lines', line=list(color="white"), hoverinfo = "text", text = ~text) %>% layout(
+                  title = 'Favorites/Retweets of LeoMessi Twitter Account in the 6 Month', xaxis = list(title = 'Date'), 
+                  yaxis=list(title='Number of favorites/retweets'))
+lm1
+```
+
+

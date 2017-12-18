@@ -1,0 +1,103 @@
+---
+title: "map"
+author: "Shijie Cai"
+date: "2017/12/16"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(devtools)
+library(twitteR)
+library(stringr)
+library(graphTweets)
+library(igraph)
+library(streamR)
+library(ROAuth)
+library(tidyr)
+library(tidyverse)
+library(maps)
+```
+
+
+```{r}
+load("my_oauth.Rdata")
+filterStream("ronaldo.json", 
+             track=c("Ronaldo"), 
+             locations = c(-125, 25, -66,50), 
+             timeout=30, oauth=my_oauth)
+Ronaldo<-parseTweets("Ronaldo.json", verbose = TRUE)
+ck1 <- sum(Ronaldo$lat>0, na.rm = TRUE)
+ck2 <- sum(Ronaldo$place_lat>0, na.rm = TRUE)
+ck3 <- sum(!is.na(Ronaldo$location))
+
+state <- map_data("state")  
+
+Ronaldopoints <- data.frame(x = as.numeric(Ronaldo$lon),  
+                       y = as.numeric(Ronaldo$lat))
+Ronaldopoints <- Ronaldopoints[Ronaldopoints$y > 25, ]  
+Ronaldopoints<-filter(Ronaldopoints,y>19&y<65,x>(-161.7)&x<(-68.01))
+ggplot(state) + 
+  geom_map(aes(map_id = region),  
+           map =state,  
+           fill = "white",             
+           color = "grey20", size = 0.25) + 
+  expand_limits(x = state$long, y = state$lat) +            
+  theme(axis.line = element_blank(),  
+        axis.text = element_blank(),  
+        axis.ticks = element_blank(),                     
+        axis.title = element_blank(),  
+        panel.background = element_blank(),  
+        panel.border = element_blank(),                     
+        panel.grid.major = element_blank(), 
+        plot.background = element_blank(),                     
+        plot.margin = unit(0 * c( -1.5, -1.5, -1.5, -1.5), "lines")) +  
+        geom_point(data = Ronaldopoints,             
+        aes(x = x, y = y), size = 1,  
+        alpha = 1/5, color = "blue")
+saveRDS(Ronaldopoints, file="ronaldomap.rds")
+```
+
+```{R}
+load("my_oauth.Rdata")
+## ggmap for tweets for Leo Messi
+
+filterStream("messi.json", 
+             track=c("messi10stats"), 
+             locations = c(-125, 25, -66,50), 
+             timeout=30, oauth=my_oauth)
+messi<-parseTweets("messi.json", verbose = TRUE)
+hk1 <- sum(messi$lat>0, na.rm = TRUE)
+hk2 <- sum(messi$place_lat>0, na.rm = TRUE)
+hk3 <- sum(!is.na(messi$location))
+
+state <- map_data("state")   
+messipoints <- data.frame(x = as.numeric(messi$lon),  
+                       y = as.numeric(messi$lat))
+messipoints <- messipoints[messipoints$y > 25, ]  
+messipoints<-filter(messipoints,y>19&y<65,x>(-161.7)&x<(-68.01))
+ggplot(state) + 
+  geom_map(aes(map_id = region),  
+           map =state,  
+           fill = "white",             
+           color = "grey20", size = 0.25) + 
+  expand_limits(x = state$long, y = state$lat) +            
+  theme(axis.line = element_blank(),  
+        axis.text = element_blank(),  
+        axis.ticks = element_blank(),                     
+        axis.title = element_blank(),  
+        panel.background = element_blank(),  
+        panel.border = element_blank(),                     
+        panel.grid.major = element_blank(), 
+        plot.background = element_blank(),                     
+        plot.margin = unit(0 * c( -1.5, -1.5, -1.5, -1.5), "lines")) +  
+        geom_point(data = messipoints,             
+        aes(x = x, y = y), size = 1,  
+        alpha = 1/5, color = "blue")
+saveRDS(messipoints, file="messimap.rds")
+
+
+```

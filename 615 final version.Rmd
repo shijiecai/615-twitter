@@ -1,0 +1,255 @@
+---
+title: "615 final version"
+author: "Shijie Cai"
+date: "2017/12/18"
+output:
+  pdf_document:
+    latex_engine: xelatex
+  word_document: default
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning=FALSE, error = FALSE, message = FALSE)
+```
+
+
+```{r}
+library(devtools)
+library(twitteR)
+library(tm)
+library(stringr)
+library(wordcloud)
+library(SnowballC)
+library(ROAuth)
+
+library(tm)
+library(syuzhet)
+library(reshape2)
+
+library(graphTweets)
+library(igraph)
+library(streamR)
+library(tidyr)
+library(tidyverse)
+library(maps)
+
+library(tinytex)
+```
+
+```{r}
+api_key <- 	"5TxFq8Omml0YFbOw0xtyuBv8A"
+api_secret <- "MkVw0SOn9F0roAGul9RvNwl0Y4p5bDpUBhVcvUHw62giLeZXdR"
+access_token <- "2240907564-2o7ZSQMMQoIAgvd46BEEzOFqbjM7R2fmc8mccyp"
+access_token_secret <- "5hcnZ3pIoG0LOh0WrMtFDR09L4q8236i85m9sMIs0YSLz"
+  
+setup_twitter_oauth(api_key, 
+                    api_secret, 
+                    access_token, 
+                    access_token_secret)
+
+#requestURL <- "https://api.twitter.com/oauth/request_token"
+#accessURL <- "https://api.twitter.com/oauth/access_token"
+#authURL <- "https://api.twitter.com/oauth/authorize"
+#consumerKey <- 	"LFNRqX5i1PkB69SjEEncXWloq"
+#consumerSecret <- "4sDHqY6aLm7PRfJLxpq6GsWqphZxzX3dXLjssSLXYhO8wPwL3F"
+#my_oauth <- OAuthFactory$new(consumerKey = consumerKey, consumerSecret = consumerSecret, requestURL = requestURL, accessURL = accessURL, authURL = authURL)
+#my_oauth$handshake(cainfo = system.file("CurlSSL", "cacert.pem", package = "RCurl"))
+#save(my_oauth, file = "my_oauth.Rdata")
+```
+
+```{r}
+load("my_oauth.Rdata")
+filterStream("ronaldo.json", 
+             track=c("Ronaldo"), 
+             locations = c(-125, 25, -66,50), 
+             timeout=30, oauth=my_oauth)
+Ronaldo<-parseTweets("Ronaldo.json", verbose = TRUE)
+ck1 <- sum(Ronaldo$lat>0, na.rm = TRUE)
+ck2 <- sum(Ronaldo$place_lat>0, na.rm = TRUE)
+ck3 <- sum(!is.na(Ronaldo$location))
+
+state <- map_data("state")  
+
+Ronaldopoints <- data.frame(x = as.numeric(Ronaldo$lon),  
+                       y = as.numeric(Ronaldo$lat))
+Ronaldopoints <- Ronaldopoints[Ronaldopoints$y > 25, ]  
+Ronaldopoints<-filter(Ronaldopoints,y>19&y<65,x>(-161.7)&x<(-68.01))
+ggplot(state) + 
+  geom_map(aes(map_id = region),  
+           map =state,  
+           fill = "white",             
+           color = "grey20", size = 0.25) + 
+  expand_limits(x = state$long, y = state$lat) +            
+  theme(axis.line = element_blank(),  
+        axis.text = element_blank(),  
+        axis.ticks = element_blank(),                     
+        axis.title = element_blank(),  
+        panel.background = element_blank(),  
+        panel.border = element_blank(),                     
+        panel.grid.major = element_blank(), 
+        plot.background = element_blank(),                     
+        plot.margin = unit(0 * c( -1.5, -1.5, -1.5, -1.5), "lines")) +  
+        geom_point(data = Ronaldopoints,             
+        aes(x = x, y = y), size = 1,  
+        alpha = 1/5, color = "blue")
+saveRDS(Ronaldopoints, file="ronaldomap.rds")
+
+load("my_oauth.Rdata")
+
+filterStream("messi.json", 
+             track=c("messi10stats"), 
+             locations = c(-125, 25, -66,50), 
+             timeout=30, oauth=my_oauth)
+messi<-parseTweets("messi.json", verbose = TRUE)
+hk1 <- sum(messi$lat>0, na.rm = TRUE)
+hk2 <- sum(messi$place_lat>0, na.rm = TRUE)
+hk3 <- sum(!is.na(messi$location))
+
+state <- map_data("state")   
+messipoints <- data.frame(x = as.numeric(messi$lon),  
+                       y = as.numeric(messi$lat))
+messipoints <- messipoints[messipoints$y > 25, ]  
+messipoints<-filter(messipoints,y>19&y<65,x>(-161.7)&x<(-68.01))
+ggplot(state) + 
+  geom_map(aes(map_id = region),  
+           map =state,  
+           fill = "white",             
+           color = "grey20", size = 0.25) + 
+  expand_limits(x = state$long, y = state$lat) +            
+  theme(axis.line = element_blank(),  
+        axis.text = element_blank(),  
+        axis.ticks = element_blank(),                     
+        axis.title = element_blank(),  
+        panel.background = element_blank(),  
+        panel.border = element_blank(),                     
+        panel.grid.major = element_blank(), 
+        plot.background = element_blank(),                     
+        plot.margin = unit(0 * c( -1.5, -1.5, -1.5, -1.5), "lines")) +  
+        geom_point(data = messipoints,             
+        aes(x = x, y = y), size = 1,  
+        alpha = 1/5, color = "blue")
+saveRDS(messipoints, file="messimap.rds")
+```
+
+I only give 30 seconds for twitter to find data, so it might be not very accurate. Suprisingly to find that people talk Ronaldo much often then Messi, as you can see, blue dots represent Ronaldo and red dots represent Messi. It is clearly that Messi has fewer points and dots for Ronaldo mainly concentrate on the west and east coast which makes a lot sense.
+
+
+
+```{r}
+# Wordcould for CristianoRonaldo from twiter.
+CristianoRonaldo <- searchTwitteR("CristianoRonaldo", lang="en",since='2017-11-11', until='2017-12-12', n=1000)
+CristianoRonaldo <- twListToDF(CristianoRonaldo)
+saveRDS(CristianoRonaldo, file="ccc.rds")
+```
+
+```{r}
+# First, we need to create a corpus.
+CristianoRonaldo$text <- iconv(CristianoRonaldo$text,from = "latin1", to = "ASCII", sub = "")
+wordCorpus <- Corpus(VectorSource(str_replace_all(CristianoRonaldo$text, "@", "")))
+# Next, we will convert the corpus to a plain text document.
+wordCorpus <- tm_map(wordCorpus, PlainTextDocument)
+# Then, we will remove all punctuation and stopwords.
+wordCorpus <- tm_map(wordCorpus, removePunctuation)
+wordCorpus <- tm_map(wordCorpus, content_transformer(tolower))
+wordCorpus <- tm_map(wordCorpus, removeWords, c("cristiano","ronaldo"))
+wordCorpus <- tm_map(wordCorpus, removeWords, stopwords('english'))
+wordCorpus <- tm_map(wordCorpus, removeWords, c('the', 'this', stopwords('english')))
+# Next, we will perform stemming.
+wordCorpus <- tm_map(wordCorpus, stemDocument)
+saveRDS(wordCorpus, file="CristianoRonaldo.rds")
+# Plot
+set.seed(1101)
+wordcloud(wordCorpus, max.words = 100, random.order = FALSE)
+```
+
+```{r}
+# Wordcould for LeoMessi from twiter.
+LeoMessi <- searchTwitteR("Messi", lang="en",since='2017-11-11', until='2017-12-12', n=1000)
+LeoMessi <- twListToDF(LeoMessi)
+saveRDS(LeoMessi, file="mmm.rds")
+```
+
+```{r}
+# First, we need to create a corpus.
+LeoMessi$text <- iconv(LeoMessi$text,from = "latin1", to = "ASCII", sub = "")
+wordCorpus <- Corpus(VectorSource(str_replace_all(LeoMessi$text, "@", "")))
+# Next, we will convert the corpus to a plain text document.
+wordCorpus <- tm_map(wordCorpus, PlainTextDocument)
+# Then, we will remove all punctuation and stopwords.
+wordCorpus <- tm_map(wordCorpus, removePunctuation)
+wordCorpus <- tm_map(wordCorpus, content_transformer(tolower))
+wordCorpus <- tm_map(wordCorpus, removeWords, c("messi"))
+wordCorpus <- tm_map(wordCorpus, removeWords, stopwords('english'))
+wordCorpus <- tm_map(wordCorpus, removeWords, c('the', 'this', stopwords('english')))
+# Next, we will perform stemming.
+wordCorpus <- tm_map(wordCorpus, stemDocument)
+saveRDS(wordCorpus, file="LeoMessi.rds")
+# Plot
+set.seed(1101)
+wordcloud(wordCorpus, max.words = 100, random.order = FALSE)
+```
+
+These wordcloud are for  my favorite soccer player Cristiano Ronaldo and his biggest rival Leo Messi. I can feel that people are really excited about these players and team, word like "ballon", "win", "5th" appears a lot. Because a few weeks ago Ronaldo just won his 5th ballon. I think people also compare Ronaldo and Messi a lot because their names appear on other tweets very often and there are other players' name on the wordcloud as well, I think people are comparing all these great players.\newline
+
+```{r}
+#Sentiment Analysis
+ccc<-readRDS("ccc.rds")
+mmm<-readRDS("mmm.rds")
+players<-list(CristianoRonaldo=ccc, LeoMessi=mmm)
+
+# CLeaning
+clean.text <- function(some_txt){
+  some_txt = gsub("(RT|via)((?:\\b\\W*@\\w+)+)", "", some_txt)
+  some_txt = gsub("@\\w+", "", some_txt)
+  some_txt = gsub("[[:punct:]]", "", some_txt)
+  some_txt = gsub("[[:digit:]]", "", some_txt)
+  some_txt = gsub("http\\w+", "", some_txt)
+  some_txt = gsub("[ \t]{2,}", "", some_txt)
+  some_txt = gsub("^\\s+|\\s+$", "", some_txt)
+  some_txt = gsub("amp", "", some_txt)
+  # define "tolower error handling" function
+  try.tolower = function(x)
+  {
+    y = NA
+    try_error = tryCatch(tolower(x), error=function(e) e)
+    if (!inherits(try_error, "error"))
+      y = tolower(x)
+    return(y)
+  }
+  some_txt = sapply(some_txt, try.tolower)
+  names(some_txt) = NULL
+  return(some_txt)
+}
+
+player.text <- lapply(players, FUN=function(x) {clean.text(x$text)})
+player.sentiment <- lapply(player.text, FUN=function(x) {get_nrc_sentiment(x)})
+saveRDS(player.sentiment, file='player.sentiment.rds')
+
+#Sentiment analysis for players Leo Messi and Cristiano Ronaldo
+
+m.sentiment<-player.sentiment$LeoMessi
+messi<-melt(m.sentiment, measure.vars  = c("anger", "anticipation","disgust", "fear","joy", "sadness","surprise","trust","negative","positive"))
+saveRDS(messi, file='messi.sentiment.rds')
+
+
+c.sentiment<-player.sentiment$CristianoRonaldo
+cris<-melt(c.sentiment, measure.vars  = c("anger", "anticipation","disgust", "fear","joy", "sadness","surprise","trust","negative","positive"))
+saveRDS(cris, file='cristiano.sentiment.rds')
+
+library(ggplot2)
+
+bm<-ggplot(messi, aes(variable,value))
+bm<-bm +geom_bar(stat = "identity")+coord_flip()
+bm<-bm + ggtitle("Sentiment Analysis for Messi")
+bm
+
+cm<-ggplot(cris, aes(variable,value))
+cm<-cm +geom_bar(stat = "identity")+coord_flip()
+cm<- cm + ggtitle("Sentiment Analysis for Cristiano")
+cm
+```
+
+It seems that Cristiano is a more controversial player than Leo Messi. There are a lot of negative words for Ronaldo than Messi, however, Ronaldo is a more trust worth than Leo Messi.
+
+
+
+

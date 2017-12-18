@@ -1,0 +1,130 @@
+---
+title: "615 project"
+author: "Shijie Cai"
+date: "2017/12/10"
+output: pdf_document
+---
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(echo=TRUE, warning=FALSE, message=FALSE)
+```
+
+
+```{r}
+library(devtools)
+library(twitteR)
+library(tm)
+library(stringr)
+library(wordcloud)
+library(SnowballC)
+library(ROAuth)
+```
+
+```{r}
+api_key <- 	"5TxFq8Omml0YFbOw0xtyuBv8A"
+api_secret <- "MkVw0SOn9F0roAGul9RvNwl0Y4p5bDpUBhVcvUHw62giLeZXdR"
+access_token <- "2240907564-2o7ZSQMMQoIAgvd46BEEzOFqbjM7R2fmc8mccyp"
+access_token_secret <- "5hcnZ3pIoG0LOh0WrMtFDR09L4q8236i85m9sMIs0YSLz"
+  
+setup_twitter_oauth(api_key, api_secret, access_token, access_token_secret)
+
+#requestURL <- "https://api.twitter.com/oauth/request_token"
+#accessURL <- "https://api.twitter.com/oauth/access_token"
+#authURL <- "https://api.twitter.com/oauth/authorize"
+#consumerKey <- 	"LFNRqX5i1PkB69SjEEncXWloq"
+#consumerSecret <- "4sDHqY6aLm7PRfJLxpq6GsWqphZxzX3dXLjssSLXYhO8wPwL3F"
+#my_oauth <- OAuthFactory$new(consumerKey = consumerKey, consumerSecret = consumerSecret, 
+                             #requestURL = requestURL, accessURL = accessURL, authURL = authURL)
+#my_oauth$handshake(cainfo = system.file("CurlSSL", "cacert.pem", package = "RCurl"))
+#save(my_oauth, file = "my_oauth.Rdata")
+```
+
+```{r}
+RealMadrid <- searchTwitteR("RealMadrid", lang="en",since='2017-11-11', until='2017-12-12', n=10000)
+RealMadrid <- twListToDF(RealMadrid)
+```
+
+
+```{r}
+##### Wordcould for Realmadrid from twiter.
+## First, we need to create a corpus.
+RealMadrid$text <- iconv(RealMadrid$text,from = "latin1", to = "ASCII", sub = "")
+wordCorpus <- Corpus(VectorSource(str_replace_all(RealMadrid$text, "@","" )))
+## Next, we will convert the corpus to a plain text document.
+wordCorpus <- tm_map(wordCorpus, PlainTextDocument)
+## Then, we will remove all punctuation and stopwords.
+wordCorpus <- tm_map(wordCorpus, removePunctuation)
+wordCorpus <- tm_map(wordCorpus, content_transformer(tolower))
+wordCorpus <- tm_map(wordCorpus, removeWords, c("real","madrid","realmadrid"))
+wordCorpus <- tm_map(wordCorpus, removeWords, stopwords('english'))
+wordCorpus <- tm_map(wordCorpus, removeWords, c('the', 'this', stopwords('english')))
+## Next, we will perform stemming.
+wordCorpus <- tm_map(wordCorpus, stemDocument)
+saveRDS(RealMadrid, file="RealMadrid.rds")
+## Plot
+set.seed(7)
+wordcloud(wordCorpus, max.words = 100, random.order = FALSE)
+```
+
+```{r}
+##### Wordcould for CristianoRonaldo from twiter.
+CristianoRonaldo <- searchTwitteR("CristianoRonaldo", lang="en",since='2017-11-11', until='2017-12-12', n=1000)
+CristianoRonaldo <- twListToDF(CristianoRonaldo)
+saveRDS(CristianoRonaldo, file="ccc.rds")
+```
+
+```{r}
+## First, we need to create a corpus.
+CristianoRonaldo$text <- iconv(CristianoRonaldo$text,from = "latin1", to = "ASCII", sub = "")
+wordCorpus <- Corpus(VectorSource(str_replace_all(CristianoRonaldo$text, "@", "")))
+## Next, we will convert the corpus to a plain text document.
+wordCorpus <- tm_map(wordCorpus, PlainTextDocument)
+## Then, we will remove all punctuation and stopwords.
+wordCorpus <- tm_map(wordCorpus, removePunctuation)
+wordCorpus <- tm_map(wordCorpus, content_transformer(tolower))
+wordCorpus <- tm_map(wordCorpus, removeWords, c("cristiano","ronaldo"))
+wordCorpus <- tm_map(wordCorpus, removeWords, stopwords('english'))
+wordCorpus <- tm_map(wordCorpus, removeWords, c('the', 'this', stopwords('english')))
+## Next, we will perform stemming.
+wordCorpus <- tm_map(wordCorpus, stemDocument)
+saveRDS(wordCorpus, file="CristianoRonaldo.rds")
+## Plot
+set.seed(1101)
+wordcloud(wordCorpus, max.words = 100, random.order = FALSE)
+
+```
+
+```{r}
+##### Wordcould for LeoMessi from twiter.
+LeoMessi <- searchTwitteR("Messi", lang="en",since='2017-11-11', until='2017-12-12', n=1000)
+LeoMessi <- twListToDF(LeoMessi)
+saveRDS(LeoMessi, file="mmm.rds")
+```
+
+```{r}
+## First, we need to create a corpus.
+LeoMessi$text <- iconv(LeoMessi$text,from = "latin1", to = "ASCII", sub = "")
+wordCorpus <- Corpus(VectorSource(str_replace_all(LeoMessi$text, "@", "")))
+## Next, we will convert the corpus to a plain text document.
+wordCorpus <- tm_map(wordCorpus, PlainTextDocument)
+## Then, we will remove all punctuation and stopwords.
+wordCorpus <- tm_map(wordCorpus, removePunctuation)
+wordCorpus <- tm_map(wordCorpus, content_transformer(tolower))
+wordCorpus <- tm_map(wordCorpus, removeWords, c("messi"))
+wordCorpus <- tm_map(wordCorpus, removeWords, stopwords('english'))
+wordCorpus <- tm_map(wordCorpus, removeWords, c('the', 'this', stopwords('english')))
+## Next, we will perform stemming.
+wordCorpus <- tm_map(wordCorpus, stemDocument)
+saveRDS(wordCorpus, file="LeoMessi.rds")
+## Plot
+set.seed(1101)
+wordcloud(wordCorpus, max.words = 100, random.order = FALSE)
+```
+
+These wordcloud are for my favorite soccer team Real Madrid, my favorite soccer player Cristiano Ronaldo and his biggest rival Leo Messi. I can feel that people are really excited about these players and team, word like "madrid", "win", "good" appears a lot. I think people also compare Ronaldo and Messi a lot because their names appear on other tweets very often.
+
+
+
+
+
+
